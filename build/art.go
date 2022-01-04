@@ -61,8 +61,8 @@ func globalFlags(ctx android.LoadHookContext) ([]string, []string) {
 	}
 
 	if !ctx.Config().IsEnvFalse("ART_USE_READ_BARRIER") && ctx.Config().ArtUseReadBarrier() {
-		// Used to change the read barrier type. Valid values are BAKER, BROOKS,
-		// TABLELOOKUP. The default is BAKER.
+		// Used to change the read barrier type. Valid values are BAKER, TABLELOOKUP.
+		// The default is BAKER.
 		barrierType := ctx.Config().GetenvWithDefault("ART_READ_BARRIER_TYPE", "BAKER")
 		cflags = append(cflags,
 			"-DART_USE_READ_BARRIER=1",
@@ -166,6 +166,11 @@ func hostFlags(ctx android.LoadHookContext) []string {
 
 	clang_path := filepath.Join(config.ClangDefaultBase, ctx.Config().PrebuiltOS(), config.ClangDefaultVersion)
 	cflags = append(cflags, "-DART_CLANG_PATH=\""+clang_path+"\"")
+
+	if !ctx.Config().IsEnvFalse("CPU_SSE42") {
+		cflags = append(cflags, "-msse4.2")
+		cflags = append(cflags, "-mpopcnt")
+	}
 
 	return cflags
 }

@@ -294,22 +294,14 @@ static inline JValue Execute(
     ArtMethod *method = shadow_frame.GetMethod();
 
     if (UNLIKELY(instrumentation->HasMethodEntryListeners())) {
-      instrumentation->MethodEnterEvent(self,
-                                        shadow_frame.GetThisObject(accessor.InsSize()),
-                                        method,
-                                        0);
+      instrumentation->MethodEnterEvent(self, method);
       if (UNLIKELY(shadow_frame.GetForcePopFrame())) {
         // The caller will retry this invoke or ignore the result. Just return immediately without
         // any value.
         DCHECK(Runtime::Current()->AreNonStandardExitsEnabled());
         JValue ret = JValue();
         PerformNonStandardReturn<MonitorState::kNoMonitorsLocked>(
-            self,
-            shadow_frame,
-            ret,
-            instrumentation,
-            accessor.InsSize(),
-            0);
+            self, shadow_frame, ret, instrumentation, accessor.InsSize());
         return ret;
       }
       if (UNLIKELY(self->IsExceptionPending())) {
@@ -321,12 +313,7 @@ static inline JValue Execute(
         if (UNLIKELY(shadow_frame.GetForcePopFrame())) {
           DCHECK(Runtime::Current()->AreNonStandardExitsEnabled());
           PerformNonStandardReturn<MonitorState::kNoMonitorsLocked>(
-              self,
-              shadow_frame,
-              ret,
-              instrumentation,
-              accessor.InsSize(),
-              0);
+              self, shadow_frame, ret, instrumentation, accessor.InsSize());
         }
         return ret;
       }

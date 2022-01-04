@@ -89,6 +89,7 @@
 #include "handle_scope-inl.h"
 #include "hidden_api.h"
 #include "image-inl.h"
+#include "indirect_reference_table.h"
 #include "instrumentation.h"
 #include "intern_table-inl.h"
 #include "interpreter/interpreter.h"
@@ -497,6 +498,8 @@ Runtime::~Runtime() {
   monitor_pool_ = nullptr;
   delete class_linker_;
   class_linker_ = nullptr;
+  delete small_irt_allocator_;
+  small_irt_allocator_ = nullptr;
   delete heap_;
   heap_ = nullptr;
   delete intern_table_;
@@ -1662,15 +1665,19 @@ bool Runtime::Init(RuntimeArgumentMap&& runtime_options_in) {
   }
   linear_alloc_.reset(CreateLinearAlloc());
 
+  small_irt_allocator_ = new SmallIrtAllocator();
+
   BlockSignals();
   InitPlatformSignalHandlers();
 
   // Change the implicit checks flags based on runtime architecture.
   switch (kRuntimeISA) {
+    case InstructionSet::kArm64:
+      implicit_suspend_checks_ = true;
+      FALLTHROUGH_INTENDED;
     case InstructionSet::kArm:
     case InstructionSet::kThumb2:
     case InstructionSet::kX86:
-    case InstructionSet::kArm64:
     case InstructionSet::kX86_64:
       implicit_null_checks_ = true;
       // Historical note: Installing stack protection was not playing well with Valgrind.
